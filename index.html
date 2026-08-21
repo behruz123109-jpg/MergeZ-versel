@@ -2,64 +2,237 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Merge Defense Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MergeZ - Zombie Defense</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #1e1e2f; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; }
+    #game-container { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; }
+    
+    /* Yuqori panel: Tanga va Jon */
+    #top-bar { display: flex; justify-content: space-between; padding: 15px; background: rgba(0,0,0,0.5); font-size: 18px; font-weight: bold; z-index: 10; }
+    .coin-text { color: #ffd700; }
+    .hp-text { color: #ff4c4c; }
+
+    /* Zombilar keladigan maydon */
+    #battlefield { flex-grow: 1; position: relative; overflow: hidden; background: #2b2b3c; border-bottom: 4px solid #ff4c4c; }
+    
+    /* Askarlar maydoni (5x2 Grid) */
+    #grid-container { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 80px); gap: 5px; padding: 10px; background: #1a1a24; }
+    .slot { background: #3a3a52; border-radius: 8px; display: flex; justify-content: center; align-items: center; border: 2px dashed #555; position: relative; }
+    
+    /* Askar (Unit) */
+    .unit { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(45deg, #4caf50, #81c784); display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); cursor: pointer; user-select: none; z-index: 5; }
+    
+    /* Zombilar */
+    .zombie { width: 40px; height: 40px; background: #e53935; position: absolute; border-radius: 5px; animation: walk infinite 0.5s alternate; }
+    .zombie-hp { position: absolute; top: -15px; left: 0; width: 100%; text-align: center; font-size: 12px; font-weight: bold; color: white;}
+
+    /* O'qlar */
+    .bullet { width: 8px; height: 16px; background: #ffd700; position: absolute; border-radius: 4px; }
+
+    /* Pastki boshqaruv paneli */
+    #controls { display: flex; justify-content: space-around; padding: 15px; background: #111; }
+    button { padding: 12px 20px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    #buy-btn { background: #4caf50; color: white; width: 45%; }
+    #buy-btn:active { transform: scale(0.95); }
+    #spin-btn { background: #ff9800; color: white; width: 45%; }
+    
+    /* Reklama joyi */
+    #ad-container { text-align: center; background: #000; min-height: 50px; display: none; }
+  </style>
 </head>
 <body>
-  <h1>Merge Defense Game</h1>
 
-  <div id="banner-ad-container" style="display:none; margin: 10px 0;"></div>
+<div id="game-container">
+  <!-- Banner reklama -->
+  <div id="ad-container"></div>
 
-  <button id="spin-btn" onclick="spinWheel()" style="padding: 12px 20px; font-size: 16px;">
-    🎁 Barabanni Aylan (Reklama ko'rish)
-  </button>
+  <div id="top-bar">
+    <div class="coin-text">💰 <span id="coin-display">100</span></div>
+    <div class="hp-text">❤️ Devor: <span id="hp-display">1000</span></div>
+  </div>
 
-  <script>
-    // RENDER SIZGA BERADIGAN DOMEN MANZILI:
-// index.html va admin.html fayllari ichidagi qatorni toping:
-const BACKEND_URL = "https://mergez-38xz.onrender.com";
-    let adsSettings = {};
+  <div id="battlefield">
+    <!-- Zombilar va o'qlar shu yerda paydo bo'ladi -->
+  </div>
 
-    // Render backend'dan reklama sozlamalarini yuklash
-    async function fetchAdsSettings() {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/ads`);
-        adsSettings = await res.json();
+  <div id="grid-container">
+    <!-- 10 ta katak (JS orqali yaratiladi) -->
+  </div>
 
-        // Banner reklama yoqilgan bo'lsa ko'rsatamiz
-        if (adsSettings.bannerAdEnabled) {
-          const container = document.getElementById('banner-ad-container');
-          container.style.display = 'block';
-          container.innerHTML = adsSettings.bannerAdCode;
+  <div id="controls">
+    <button id="buy-btn" onclick="buyUnit()">Askar Olish (50💰)</button>
+    <button id="spin-btn" onclick="spinWheel()">🎁 Baraban</button>
+  </div>
+</div>
+
+<script>
+  // --- SOZLAMALAR ---
+  const BACKEND_URL = "https://mergez-38xz.onrender.com";
+  let coins = 100;
+  let wallHp = 1000;
+  let unitCost = 50;
+  let grid = new Array(10).fill(null); // 10 ta bo'sh katak
+  let zombies = [];
+  let gameInterval;
+
+  const battlefield = document.getElementById('battlefield');
+  const gridContainer = document.getElementById('grid-container');
+  const coinDisplay = document.getElementById('coin-display');
+  const hpDisplay = document.getElementById('hp-display');
+  const buyBtn = document.getElementById('buy-btn');
+
+  // 1. MAYDONNI YARATISH (5x2 GRID)
+  function createGrid() {
+    gridContainer.innerHTML = '';
+    for (let i = 0; i < 10; i++) {
+      let slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.dataset.index = i;
+      slot.ondragover = (e) => e.preventDefault();
+      slot.ondrop = (e) => dropUnit(e, i);
+      
+      if (grid[i] !== null) {
+        let unit = document.createElement('div');
+        unit.className = 'unit';
+        unit.innerText = grid[i]; // Askar darajasi (Level)
+        unit.draggable = true;
+        unit.ondragstart = (e) => e.dataTransfer.setData('sourceIndex', i);
+        slot.appendChild(unit);
+      }
+      gridContainer.appendChild(slot);
+    }
+  }
+
+  // 2. ASKAR SOTIB OLISH
+  function buyUnit() {
+    if (coins >= unitCost) {
+      let emptyIndex = grid.indexOf(null);
+      if (emptyIndex !== -1) {
+        coins -= unitCost;
+        grid[emptyIndex] = 1; // 1-darajali askar
+        unitCost = Math.floor(unitCost * 1.15); // Narxni oshirish
+        updateUI();
+      } else {
+        alert("Maydonda joy yo'q!");
+      }
+    } else {
+      alert("Tanga yetarli emas!");
+    }
+  }
+
+  // 3. BIRLASHTIRISH (MERGE) - Drag & Drop
+  function dropUnit(e, targetIndex) {
+    let sourceIndex = e.dataTransfer.getData('sourceIndex');
+    if (sourceIndex === "" || sourceIndex == targetIndex) return;
+    
+    let sourceLevel = grid[sourceIndex];
+    let targetLevel = grid[targetIndex];
+
+    if (targetLevel === null) {
+      // Bo'sh joyga ko'chirish
+      grid[targetIndex] = sourceLevel;
+      grid[sourceIndex] = null;
+    } else if (targetLevel === sourceLevel) {
+      // Bir xil daraja bo'lsa birlashtirish
+      grid[targetIndex] = targetLevel + 1;
+      grid[sourceIndex] = null;
+    }
+    updateUI();
+  }
+
+  // 4. ZOMBILARNI PAYDO QILISH
+  function spawnZombie() {
+    let zombie = document.createElement('div');
+    zombie.className = 'zombie';
+    let startX = Math.random() * (window.innerWidth - 40);
+    zombie.style.left = startX + 'px';
+    zombie.style.top = '0px';
+    
+    let zombieObj = { el: zombie, hp: 50, maxHp: 50, y: 0, speed: 0.5 };
+    
+    let hpText = document.createElement('div');
+    hpText.className = 'zombie-hp';
+    hpText.innerText = zombieObj.hp;
+    zombie.appendChild(hpText);
+    
+    battlefield.appendChild(zombie);
+    zombies.push(zombieObj);
+  }
+
+  // 5. O'YIN SIKLI (Asosiy mexanika)
+  function gameLoop() {
+    let maxBattlefieldY = battlefield.clientHeight - 40;
+
+    // Zombilar harakati
+    for (let i = zombies.length - 1; i >= 0; i--) {
+      let z = zombies[i];
+      z.y += z.speed;
+      z.el.style.top = z.y + 'px';
+
+      // Zombi devorga yetib kelsa
+      if (z.y >= maxBattlefieldY) {
+        wallHp -= 10;
+        z.el.remove();
+        zombies.splice(i, 1);
+        
+        if (wallHp <= 0) {
+          wallHp = 0;
+          alert("O'YIN TUGADI! Devor buzildi.");
+          location.reload();
         }
-
-        // Baraban reklamasi o'chirilgan bo'lsa tugmani yashiramiz
-        if (!adsSettings.wheelAdEnabled) {
-          document.getElementById('spin-btn').style.display = 'none';
-        }
-      } catch (err) {
-        console.error("Reklamalarni yuklab bo'lmadi:", err);
       }
     }
 
-    function spinWheel() {
-      // Cooldown (Tanaffus) tekshiruvi
-      const lastSpin = localStorage.getItem('last_spin_time');
-      const now = Date.now();
-      const cooldown = (adsSettings.cooldownSeconds || 120) * 1000;
-
-      if (lastSpin && (now - lastSpin < cooldown)) {
-        const remaining = Math.ceil((cooldown - (now - lastSpin)) / 1000);
-        alert(`Keyingi reklama uchun ${remaining} soniya kuting!`);
-        return;
-      }
-
-      // Reklama ko'rsatish va mukofot berish
-      alert("Reklama ko'rildi! Baraban aylandi va 1000 Tanga berildi!");
-      localStorage.setItem('last_spin_time', now);
+    // Askarlar otish mantiqi
+    if (Math.random() < 0.1 && zombies.length > 0) {
+        shootZombies();
     }
 
-    window.onload = fetchAdsSettings;
-  </script>
+    updateUI();
+  }
+
+  // 6. O'Q OTISH
+  function shootZombies() {
+    let activeUnits = grid.filter(u => u !== null);
+    if (activeUnits.length === 0) return;
+
+    let target = zombies[0]; // Eng oldindagi zombi
+    
+    // Barcha askarlar bitta o'q otadi (bu yerda vizual emas, matematik mantiq yozildi tezkorlik uchun)
+    activeUnits.forEach(level => {
+      target.hp -= (level * 5); // Har bir level 5 zarar beradi
+    });
+
+    target.el.querySelector('.zombie-hp').innerText = target.hp;
+
+    if (target.hp <= 0) {
+      target.el.remove();
+      zombies.shift(); // Zombini ro'yxatdan o'chirish
+      coins += 10; // Zombi o'ldirgani uchun 10 tanga
+    }
+  }
+
+  // 7. EKRAN VA UI YANGILASH
+  function updateUI() {
+    coinDisplay.innerText = coins;
+    hpDisplay.innerText = wallHp;
+    buyBtn.innerText = `Askar Olish (${unitCost}💰)`;
+    createGrid();
+  }
+
+  // 8. BARABAN (Reklama)
+  function spinWheel() {
+    alert("Reklama ko'rilyapti... Sizga 1000 tanga berildi!");
+    coins += 1000;
+    updateUI();
+  }
+
+  // ISHGA TUSHIRISH
+  setInterval(spawnZombie, 3000); // Har 3 soniyada zombi
+  setInterval(gameLoop, 30); // 30ms da kadr yangilanadi
+  updateUI();
+
+</script>
 </body>
 </html>
