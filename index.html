@@ -3,63 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>MergeZ - Realistic Defense</title>
+  <title>MergeZ - Ultimate Defense</title>
   <style>
     :root {
-      --bg-color: #0f1016;
-      --wall-color: #2c3e50;
-      --slot-bg: #1e222d;
-      --slot-border: #3a4156;
-      --accent: #00ffcc;
+      --bg-dark: #121418;
+      --blood: #e74c3c;
+      --neon-green: #00ff66;
+      --neon-cyan: #00e5ff;
+      --metal: #2c3e50;
+      --metal-light: #576b82;
+      --base-bg: #0a0b0e;
     }
-    body { margin: 0; padding: 0; background-color: var(--bg-color); color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; user-select: none; }
     
-    #game-container { display: flex; flex-direction: column; width: 100vw; height: 100vh; background: url('https://www.transparenttextures.com/patterns/dark-matter.png'); }
-
-    /* Yuqori Panel */
-    #header { display: flex; justify-content: space-between; padding: 10px 20px; background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--accent); z-index: 10; box-shadow: 0 4px 15px rgba(0,255,204,0.2); }
-    .stat { font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-    .stat span { color: var(--accent); }
-
-    /* Asosiy Jang Maydoni */
-    #battlefield-wrapper { flex: 1; display: flex; position: relative; border-bottom: 3px solid #333; }
+    * { box-sizing: border-box; touch-action: none; /* Telefonda ekranni siljishini to'xtatish */ }
     
-    /* Chap tomon - Zombilar keladigan joy */
-    #zombie-zone { flex: 1; position: relative; overflow: hidden; background: linear-gradient(90deg, #151515, #1f2029); }
+    body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; background-color: var(--bg-dark); color: white; overflow: hidden; user-select: none; }
     
-    /* O'ng tomon - Devor va Askarlar pozitsiyasi */
-    #wall-zone { width: 120px; background: var(--wall-color); border-left: 4px solid #555; display: flex; flex-direction: column; justify-content: space-evenly; align-items: center; box-shadow: -10px 0 20px rgba(0,0,0,0.5); position: relative; }
-    .wall-brick-texture { position: absolute; top:0; left:0; right:0; bottom:0; background: repeating-linear-gradient(0deg, transparent, transparent 19px, #1a252f 20px), repeating-linear-gradient(90deg, transparent, transparent 39px, #1a252f 40px); opacity: 0.3; pointer-events: none; }
+    #game-container { display: flex; flex-direction: column; width: 100vw; height: 100vh; }
+
+    /* --- YUQORI PANEL --- */
+    #header { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: linear-gradient(180deg, #1a1a1a, #000); border-bottom: 2px solid var(--metal); box-shadow: 0 5px 15px rgba(0,0,0,0.8); z-index: 10; }
+    .stat-box { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; border: 1px solid rgba(255,255,255,0.2); }
+    .coin-text { color: #f1c40f; text-shadow: 0 0 5px rgba(241,196,15,0.5); }
+    .hp-text { color: var(--blood); text-shadow: 0 0 5px rgba(231,76,60,0.5); }
+
+    /* --- JANG MAYDONI (BATTLEFIELD) --- */
+    #battlefield { flex: 1; position: relative; background: radial-gradient(circle at 30% 50%, #292d35 0%, #111317 80%); border-bottom: 4px solid var(--metal-light); overflow: hidden; display: flex; }
     
-    /* Otish pozitsiyalari (Minoralar) */
-    .tower-slot { width: 80px; height: 80px; background: rgba(0,0,0,0.6); border: 2px dashed #00ffcc; border-radius: 12px; display: flex; justify-content: center; align-items: center; position: relative; z-index: 2; transition: 0.3s; }
-    .tower-slot.drag-over { background: rgba(0,255,204,0.3); transform: scale(1.05); }
-
-    /* Pastki panel - Birlashtirish (Merge) bazasi */
-    #merge-base { height: 35vh; background: #11141c; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
+    /* Jang maydoni bezaklari (Urush izlari) */
+    .crater { position: absolute; width: 60px; height: 30px; background: rgba(0,0,0,0.4); border-radius: 50%; box-shadow: inset 0 3px 5px rgba(0,0,0,0.8); }
     
-    #controls { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 10px; }
-    button { flex: 1; padding: 15px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; color: white; transition: 0.2s; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
-    #buy-btn { background: linear-gradient(45deg, #00b09b, #96c93d); }
-    #buy-btn:active { transform: translateY(4px); box-shadow: 0 0 0; }
-    #spin-btn { background: linear-gradient(45deg, #f12711, #f5af19); }
+    /* Chap hudud (Zombilar) */
+    #zombie-zone { flex: 1; position: relative; }
+    
+    /* O'ng hudud (Haqiqiy minora/devor) */
+    #wall-zone { width: 100px; background: linear-gradient(90deg, #1c232b, #2b3846); border-left: 5px solid #000; box-shadow: -10px 0 20px rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: space-evenly; align-items: center; position: relative; }
+    
+    /* Otish hududlari (To'rtburchak) */
+    .slot { width: 70px; height: 70px; background: rgba(0,0,0,0.5); border: 2px dashed #555; border-radius: 8px; /* TO'RTBURCHAK */ display: flex; justify-content: center; align-items: center; position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); transition: 0.2s; }
+    .slot.highlight { border-color: var(--neon-cyan); background: rgba(0, 229, 255, 0.1); }
 
-    /* Merge Grid (10 ta katak) */
-    #merge-grid { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr); gap: 10px; flex: 1; }
-    .merge-slot { background: var(--slot-bg); border: 2px solid var(--slot-border); border-radius: 12px; display: flex; justify-content: center; align-items: center; position: relative; }
-    .merge-slot.drag-over { border-color: var(--accent); background: rgba(0,255,204,0.1); }
+    /* --- BAZA (MERGE AREA) --- */
+    #base-area { height: 38vh; background: var(--base-bg); display: flex; flex-direction: column; padding: 10px; position: relative; border-top: 2px solid var(--neon-cyan); box-shadow: 0 -5px 20px rgba(0, 229, 255, 0.2); }
+    
+    /* Boshqaruv tugmalari */
+    #controls { display: flex; gap: 10px; margin-bottom: 10px; }
+    .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    #buy-btn { background: linear-gradient(135deg, #27ae60, #2ecc71); box-shadow: 0 4px 0 #1e8449; }
+    #buy-btn:active { transform: translateY(4px); box-shadow: none; }
+    #spin-btn { background: linear-gradient(135deg, #8e44ad, #9b59b6); box-shadow: 0 4px 0 #732d91; }
 
-    /* Askar (Unit) va Zombi (Enemy) Dizayni */
-    .unit { width: 90%; height: 90%; background-size: cover; background-position: center; border-radius: 10px; cursor: grab; position: relative; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; box-sizing: border-box; text-shadow: 0 2px 4px black; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 2px solid #aaa; }
-    .unit:active { cursor: grabbing; transform: scale(0.95); }
-    .unit-lvl { position: absolute; top: -5px; right: -5px; background: #ff0055; padding: 2px 8px; border-radius: 10px; font-size: 14px; border: 2px solid white; }
+    /* Askar kataklari (10 ta to'rtburchak) */
+    #merge-grid { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; flex: 1; }
 
-    .zombie { width: 70px; height: 70px; position: absolute; background-size: cover; background-position: center; transition: left 0.1s linear; }
-    .hp-bar-bg { position: absolute; top: -15px; left: 0; width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; border: 1px solid black; }
-    .hp-bar-fill { height: 100%; background: #ff3333; width: 100%; transition: width 0.1s; }
+    /* --- ASKARLAR (Yuqori texnologiyali to'rtburchak minoralar) --- */
+    .unit { width: 85%; height: 85%; background: linear-gradient(135deg, #434343, #1c1c1c); border: 2px solid var(--metal-light); border-radius: 8px; position: absolute; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 15px rgba(255,255,255,0.1), 0 5px 10px rgba(0,0,0,0.5); transition: transform 0.1s; }
+    .unit::after { content: ''; position: absolute; width: 40%; height: 40%; background: radial-gradient(circle, #fff, transparent); opacity: 0.2; top: 5px; left: 5px; border-radius: 50%; } /* Yorug'lik effekti */
+    
+    /* Darajaga qarab ranglar */
+    .unit[data-level="1"] { border-color: #95a5a6; box-shadow: inset 0 0 10px #95a5a6; }
+    .unit[data-level="2"] { border-color: #2ecc71; box-shadow: inset 0 0 10px #2ecc71; }
+    .unit[data-level="3"] { border-color: #3498db; box-shadow: inset 0 0 10px #3498db; }
+    .unit[data-level="4"] { border-color: #9b59b6; box-shadow: inset 0 0 10px #9b59b6; }
+    .unit[data-level="5"] { border-color: #e67e22; box-shadow: inset 0 0 10px #e67e22; }
+    .unit[data-level="6"] { border-color: #e74c3c; box-shadow: inset 0 0 15px #e74c3c; }
 
-    /* O'qlar (Bullets) */
-    .bullet { position: absolute; width: 15px; height: 4px; background: #00ffcc; box-shadow: 0 0 10px #00ffcc; border-radius: 2px; z-index: 5; }
+    .unit-lvl { position: absolute; bottom: 2px; right: 4px; font-size: 14px; font-weight: 900; color: white; text-shadow: 1px 1px 2px black; }
+    .unit-gun { width: 60%; height: 8px; background: #111; position: absolute; top: 10px; right: -5px; border-radius: 4px; border: 1px solid #555; } /* Miltiq uchi */
+
+    /* Drag animatsiyasi */
+    .dragging { opacity: 0.8; transform: scale(1.1); z-index: 1000; pointer-events: none; }
+
+    /* --- ZOMBILAR (Har xil o'lcham va kuch) --- */
+    .zombie { position: absolute; background: radial-gradient(circle at top left, #4a6b2c, #1a290c); border-radius: 40% 40% 10% 10%; box-shadow: inset -5px -5px 15px rgba(0,0,0,0.8), 0 5px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; transition: left 0.05s linear; }
+    /* Zombi ko'zlari */
+    .zombie::before, .zombie::after { content: ''; position: absolute; top: 20%; width: 20%; height: 15%; background: #ff0000; box-shadow: 0 0 8px #ff0000; border-radius: 50%; }
+    .zombie::before { left: 20%; }
+    .zombie::after { right: 20%; }
+
+    /* Zombi Turlari */
+    .z-small { width: 40px; height: 40px; background: radial-gradient(circle at top left, #6b8e23, #2f4f4f); }
+    .z-normal { width: 60px; height: 60px; }
+    .z-boss { width: 90px; height: 90px; background: radial-gradient(circle at top left, #8b0000, #2a0000); border-radius: 20%; }
+    .z-boss::before, .z-boss::after { background: #ffea00; box-shadow: 0 0 10px #ffea00; } /* Boss ko'zi sariq */
+
+    .hp-bar-bg { position: absolute; top: -12px; width: 100%; height: 6px; background: #222; border: 1px solid #000; border-radius: 3px; overflow: hidden; }
+    .hp-bar-fill { height: 100%; background: var(--blood); width: 100%; }
+
+    /* --- O'QLAR (Lasers) --- */
+    .bullet { position: absolute; height: 4px; background: var(--neon-cyan); box-shadow: 0 0 8px var(--neon-cyan); border-radius: 2px; z-index: 5; }
+
+    /* --- MODAL (Ogohlantirish va Baraban) --- */
+    #modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
+    .modal-box { background: linear-gradient(180deg, #1e2430, #0f1218); padding: 25px; border-radius: 15px; border: 2px solid var(--neon-green); width: 85%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,255,102,0.2); }
+    .modal-title { font-size: 22px; color: #f1c40f; margin-bottom: 10px; }
+    .modal-text { font-size: 16px; margin-bottom: 20px; color: #ddd; line-height: 1.5; }
+    .modal-btns { display: flex; gap: 15px; }
+    .modal-btns button { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; }
+    .btn-yes { background: var(--neon-green); color: black; }
+    .btn-no { background: #e74c3c; color: white; }
+
+    /* Baraban Animatsiyasi (CSS) */
+    .spinner { width: 100px; height: 100px; border: 10px solid #f3f3f3; border-top: 10px solid #f1c40f; border-radius: 50%; margin: 0 auto 20px auto; display: none; }
+    .spin-anim { display: block; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
   </style>
 </head>
@@ -68,298 +115,383 @@
 <div id="game-container">
   
   <div id="header">
-    <div class="stat">💰 <span id="coin-display">200</span></div>
-    <div class="stat">🛡️ Devor HP: <span id="hp-display">2000</span></div>
+    <div class="stat-box coin-text">💰 <span id="coin-display">300</span></div>
+    <div class="stat-box hp-text">🛡️ Devor: <span id="hp-display">2500</span></div>
   </div>
 
-  <div id="battlefield-wrapper">
+  <div id="battlefield">
+    <div class="crater" style="top: 20%; left: 30%;"></div>
+    <div class="crater" style="top: 60%; left: 60%;"></div>
+    <div class="crater" style="top: 80%; left: 20%;"></div>
+    
     <div id="zombie-zone"></div>
     
     <div id="wall-zone">
-      <div class="wall-brick-texture"></div>
-      <!-- 4 ta otish pozitsiyasi -->
-      <div class="tower-slot" data-type="tower" data-index="0"></div>
-      <div class="tower-slot" data-type="tower" data-index="1"></div>
-      <div class="tower-slot" data-type="tower" data-index="2"></div>
-      <div class="tower-slot" data-type="tower" data-index="3"></div>
+      <div class="slot" data-type="tower" data-index="0"></div>
+      <div class="slot" data-type="tower" data-index="1"></div>
+      <div class="slot" data-type="tower" data-index="2"></div>
+      <div class="slot" data-type="tower" data-index="3"></div>
+      <div class="slot" data-type="tower" data-index="4"></div>
     </div>
   </div>
 
-  <div id="merge-base">
+  <div id="base-area">
     <div id="controls">
-      <button id="buy-btn" onclick="buyUnit()">Askar Olish (50💰)</button>
-      <button id="spin-btn" onclick="spinWheel()">🎁 Baraban</button>
+      <button id="buy-btn" class="btn" onclick="buyUnit()">Askar <span>(50💰)</span></button>
+      <button id="spin-btn" class="btn" onclick="showAdWarning()">🎁 Omad</button>
     </div>
-    
     <div id="merge-grid">
-      <!-- 10 ta katak JS orqali qo'shiladi -->
+      <!-- JS orqali to'ldiriladi (10 ta katak) -->
     </div>
   </div>
 
 </div>
 
-<script>
-  /* ====== RASMLAR (ASSETS) ====== */
-  // O'zingizning haqiqiy rasmlaringiz ssilkalarini shu yerga qo'yasiz:
-  const ASSETS = {
-    soldier_bg: 'https://img.freepik.com/free-vector/soldier-character-game_23-2148522301.jpg?w=150', // Askar rasmi
-    zombie_bg: 'https://img.freepik.com/free-vector/zombie-character-game_23-2148522302.jpg?w=150'    // Zombi rasmi
-  };
+<!-- REKLAMA OGOHLANTIRISH MODALI -->
+<div id="modal-overlay">
+  <div class="modal-box">
+    <div class="spinner" id="wheel-spinner"></div>
+    <div id="modal-content">
+      <div class="modal-title">💎 Omad Barabani</div>
+      <div class="modal-text">Qisqa reklama roligini tomosha qilib, minglab tangalar yutib oling! Reklama ko'rishni xohlaysizmi?</div>
+      <div class="modal-btns">
+        <button class="btn-no" onclick="closeModal()">Yo'q</button>
+        <button class="btn-yes" onclick="watchAd()">Ha, Ko'rish</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<script>
   /* ====== HOLAT (STATE) ====== */
-  let coins = 200;
-  let wallHp = 2000;
+  let coins = 300;
+  let wallHp = 2500;
   let unitCost = 50;
   
   let mergeSlots = new Array(10).fill(null);
-  let towerSlots = new Array(4).fill(null);
+  let towerSlots = new Array(5).fill(null);
   let zombies = [];
   
-  // Elementlar
   const mergeGrid = document.getElementById('merge-grid');
   const zombieZone = document.getElementById('zombie-zone');
   
-  /* ====== INITS (Ishga tushirish) ====== */
+  /* ====== INITIALIZATION ====== */
   function initGame() {
-    createMergeSlots();
-    setupDragAndDrop();
+    // 10 ta baza kataklari
+    for (let i = 0; i < 10; i++) {
+      let s = document.createElement('div');
+      s.className = 'slot';
+      s.dataset.type = 'merge';
+      s.dataset.index = i;
+      mergeGrid.appendChild(s);
+    }
     
-    // O'yin tsikli
-    setInterval(spawnZombie, 4000);
+    setupTouchAndMouse();
+    setInterval(spawnZombie, 3000); // Har 3s da zombi
     setInterval(moveZombies, 50);
-    setInterval(towerShoot, 800); // Askarlar har 0.8 soniyada otadi
-    
+    setInterval(towerShoot, 600); // Har 0.6s da otish
     updateUI();
   }
 
-  /* ====== UI YARATISH ====== */
-  function createMergeSlots() {
-    mergeGrid.innerHTML = '';
-    for (let i = 0; i < 10; i++) {
-      let slot = document.createElement('div');
-      slot.className = 'merge-slot';
-      slot.dataset.type = 'merge';
-      slot.dataset.index = i;
-      mergeGrid.appendChild(slot);
+  /* ====== RENDERING ====== */
+  function renderUnits() {
+    document.querySelectorAll('.slot').forEach(slot => {
+      // Eskilarini tozalash
+      let existingUnit = slot.querySelector('.unit');
+      if(existingUnit) existingUnit.remove();
+      
+      let type = slot.dataset.type;
+      let index = parseInt(slot.dataset.index);
+      let level = type === 'merge' ? mergeSlots[index] : towerSlots[index];
+      
+      if (level !== null) {
+        let u = document.createElement('div');
+        u.className = 'unit';
+        u.dataset.level = level;
+        u.dataset.type = type;
+        u.dataset.index = index;
+        
+        u.innerHTML = `<div class="unit-gun"></div><div class="unit-lvl">Lvl ${level}</div>`;
+        slot.appendChild(u);
+      }
+    });
+  }
+
+  /* ====== TELEFON UCHUN TOUCH DRAG & DROP ====== */
+  let activeDragEl = null;
+  let dragGhost = null;
+  
+  function setupTouchAndMouse() {
+    const container = document.getElementById('game-container');
+    
+    // Boshlanishi (Touch/Mouse Down)
+    container.addEventListener('touchstart', handleDragStart, {passive: false});
+    container.addEventListener('mousedown', handleDragStart);
+    
+    // Harakatlanish (Touch/Mouse Move)
+    container.addEventListener('touchmove', handleDragMove, {passive: false});
+    container.addEventListener('mousemove', handleDragMove);
+    
+    // Tugashi (Touch/Mouse Up)
+    container.addEventListener('touchend', handleDragEnd);
+    container.addEventListener('mouseup', handleDragEnd);
+  }
+
+  function handleDragStart(e) {
+    let target = e.target.closest('.unit');
+    if (!target) return;
+    
+    e.preventDefault(); // Ekranni siljishini to'sish
+    activeDragEl = target;
+    
+    // Ghost (nusxa) yaratish - barmoq tagida yurishi uchun
+    dragGhost = target.cloneNode(true);
+    dragGhost.classList.add('dragging');
+    document.body.appendChild(dragGhost);
+    
+    moveGhost(e);
+    target.style.opacity = '0.3'; // Aslini xira qilish
+  }
+
+  function handleDragMove(e) {
+    if (!dragGhost) return;
+    e.preventDefault();
+    moveGhost(e);
+    
+    // Orqa fondagi katakni belgilash
+    let x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    let y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
+    let elemBelow = document.elementFromPoint(x, y);
+    let slotBelow = elemBelow ? elemBelow.closest('.slot') : null;
+    if (slotBelow) slotBelow.classList.add('highlight');
+  }
+
+  function moveGhost(e) {
+    let x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    let y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    dragGhost.style.left = (x - 30) + 'px'; // Markazlashtirish
+    dragGhost.style.top = (y - 30) + 'px';
+  }
+
+  function handleDragEnd(e) {
+    if (!dragGhost) return;
+    
+    let x = e.type.includes('touch') ? e.changedTouches[0].clientX : e.clientX;
+    let y = e.type.includes('touch') ? e.changedTouches[0].clientY : e.clientY;
+    
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('highlight'));
+    
+    let elemBelow = document.elementFromPoint(x, y);
+    let targetSlot = elemBelow ? elemBelow.closest('.slot') : null;
+    
+    if (targetSlot) {
+      processMergeOrSwap(activeDragEl, targetSlot);
+    }
+    
+    activeDragEl.style.opacity = '1';
+    dragGhost.remove();
+    dragGhost = null;
+    activeDragEl = null;
+    
+    renderUnits();
+  }
+
+  /* ====== MERGE YOKI SWAP MANTIG'I ====== */
+  function processMergeOrSwap(sourceUnit, targetSlot) {
+    let srcType = sourceUnit.dataset.type;
+    let srcIdx = parseInt(sourceUnit.dataset.index);
+    let srcLvl = parseInt(sourceUnit.dataset.level);
+    
+    let tgtType = targetSlot.dataset.type;
+    let tgtIdx = parseInt(targetSlot.dataset.index);
+    
+    let srcArr = srcType === 'merge' ? mergeSlots : towerSlots;
+    let tgtArr = tgtType === 'merge' ? mergeSlots : towerSlots;
+    
+    if (srcType === tgtType && srcIdx === tgtIdx) return; // O'ziga
+    
+    let tgtLvl = tgtArr[tgtIdx];
+
+    if (tgtLvl === null) {
+      tgtArr[tgtIdx] = srcLvl;
+      srcArr[srcIdx] = null;
+    } else if (tgtLvl === srcLvl) {
+      tgtArr[tgtIdx] = tgtLvl + 1;
+      srcArr[srcIdx] = null;
+    } else {
+      tgtArr[tgtIdx] = srcLvl;
+      srcArr[srcIdx] = tgtLvl;
     }
   }
 
-  function renderUnits() {
-    // Merge gridni yangilash
-    document.querySelectorAll('.merge-slot').forEach((slot, i) => {
-      slot.innerHTML = '';
-      if (mergeSlots[i] !== null) slot.appendChild(createUnitElement(mergeSlots[i], 'merge', i));
-    });
-    
-    // Tower gridni yangilash
-    document.querySelectorAll('.tower-slot').forEach((slot, i) => {
-      slot.innerHTML = '';
-      if (towerSlots[i] !== null) slot.appendChild(createUnitElement(towerSlots[i], 'tower', i));
-    });
-  }
-
-  function createUnitElement(level, zoneType, index) {
-    let el = document.createElement('div');
-    el.className = 'unit';
-    el.draggable = true;
-    el.style.backgroundImage = `url('${ASSETS.soldier_bg}')`;
-    
-    // Lvl ga qarab rangini o'zgartirish (Realistik ko'rinish uchun)
-    const colors = ['#888', '#4caf50', '#2196f3', '#9c27b0', '#ff9800', '#f44336'];
-    el.style.borderColor = colors[Math.min(level, colors.length - 1)];
-    
-    el.innerHTML = `<div class="unit-lvl">Lvl ${level}</div>`;
-    
-    el.ondragstart = (e) => {
-      e.dataTransfer.setData('sourceType', zoneType);
-      e.dataTransfer.setData('sourceIndex', index);
-      e.dataTransfer.setData('unitLevel', level);
-    };
-    return el;
-  }
-
-  /* ====== DRAG & DROP MANTIG'I ====== */
-  function setupDragAndDrop() {
-    const allSlots = document.querySelectorAll('.merge-slot, .tower-slot');
-    
-    allSlots.forEach(slot => {
-      slot.ondragover = (e) => { e.preventDefault(); slot.classList.add('drag-over'); };
-      slot.ondragleave = () => { slot.classList.remove('drag-over'); };
-      
-      slot.ondrop = (e) => {
-        e.preventDefault();
-        slot.classList.remove('drag-over');
-        
-        const sourceType = e.dataTransfer.getData('sourceType');
-        const sourceIndex = parseInt(e.dataTransfer.getData('sourceIndex'));
-        const sourceLevel = parseInt(e.dataTransfer.getData('unitLevel'));
-        
-        const targetType = slot.dataset.type;
-        const targetIndex = parseInt(slot.dataset.index);
-        
-        const sourceArray = sourceType === 'merge' ? mergeSlots : towerSlots;
-        const targetArray = targetType === 'merge' ? mergeSlots : towerSlots;
-        
-        // O'ziga o'zi qo'yilsa
-        if (sourceType === targetType && sourceIndex === targetIndex) return;
-
-        const targetLevel = targetArray[targetIndex];
-
-        if (targetLevel === null) {
-          // Bo'sh joyga o'tkazish
-          targetArray[targetIndex] = sourceLevel;
-          sourceArray[sourceIndex] = null;
-        } else if (targetLevel === sourceLevel) {
-          // Bir xil daraja bo'lsa - Birlashtirish (Merge)
-          targetArray[targetIndex] = targetLevel + 1;
-          sourceArray[sourceIndex] = null;
-          // Merge effekti bu yerda qo'shilishi mumkin
-        } else {
-          // Har xil daraja bo'lsa - Joyini almashtirish (Swap)
-          targetArray[targetIndex] = sourceLevel;
-          sourceArray[sourceIndex] = targetLevel;
-        }
-        
-        renderUnits();
-      };
-    });
-  }
-
-  /* ====== ASKAR SOTIB OLISH ====== */
+  /* ====== EKONIMIKA ====== */
   function buyUnit() {
     if (coins >= unitCost) {
       let emptyIndex = mergeSlots.indexOf(null);
       if (emptyIndex !== -1) {
         coins -= unitCost;
         mergeSlots[emptyIndex] = 1;
-        unitCost = Math.floor(unitCost * 1.2);
+        unitCost = Math.floor(unitCost * 1.15); // Har safar 15% qimmatlashadi
         updateUI();
         renderUnits();
       } else {
-        alert("Bazada joy yo'q! Askarlarni birlashtiring yoki devorga chiqaring.");
+        alert("Bazada joy yo'q!");
       }
     }
   }
 
-  /* ====== ZOMBILAR ====== */
+  /* ====== ZOMBILAR (Har xil turlari) ====== */
+  const Z_TYPES = [
+    { type: 'z-small', hp: 80, speed: 2.2, reward: 15 },
+    { type: 'z-normal', hp: 200, speed: 1.5, reward: 25 },
+    { type: 'z-normal', hp: 250, speed: 1.4, reward: 30 },
+    { type: 'z-boss', hp: 1200, speed: 0.7, reward: 200 } // Boss
+  ];
+
   function spawnZombie() {
+    let r = Math.random();
+    let typeObj;
+    if (r < 0.1) typeObj = Z_TYPES[3]; // 10% Boss
+    else if (r < 0.4) typeObj = Z_TYPES[0]; // 30% Kichkina
+    else typeObj = Z_TYPES[1]; // 60% Oddiy
+
     let z = document.createElement('div');
-    z.className = 'zombie';
-    z.style.backgroundImage = `url('${ASSETS.zombie_bg}')`;
+    z.className = `zombie ${typeObj.type}`;
     
-    // Chapdan chiqadi, tasodifiy balandlikda (Y o'qi)
-    let maxY = zombieZone.clientHeight - 80;
-    let posY = Math.random() * maxY;
+    let maxY = zombieZone.clientHeight - 90;
+    let posY = Math.max(10, Math.random() * maxY); // Tasodifiy Y koordinata
     
-    z.style.left = '-80px';
+    z.style.left = '-100px';
     z.style.top = posY + 'px';
     
-    // Zombi ma'lumotlari
-    let hp = 100 + (Math.floor(Math.random() * 50));
-    let zObj = { el: z, x: -80, y: posY, hp: hp, maxHp: hp, speed: 1.5 + Math.random() };
+    let zObj = { el: z, x: -100, y: posY, hp: typeObj.hp, maxHp: typeObj.hp, speed: typeObj.speed, reward: typeObj.reward };
     
-    z.innerHTML = `
-      <div class="hp-bar-bg">
-        <div class="hp-bar-fill"></div>
-      </div>`;
-      
+    z.innerHTML = `<div class="hp-bar-bg"><div class="hp-bar-fill"></div></div>`;
     zombieZone.appendChild(z);
     zombies.push(zObj);
   }
 
   function moveZombies() {
-    let zoneWidth = zombieZone.clientWidth;
+    let limitX = zombieZone.clientWidth - 20; // Devorga yetib borish nuqtasi
     
     for (let i = zombies.length - 1; i >= 0; i--) {
       let z = zombies[i];
       z.x += z.speed;
       z.el.style.left = z.x + 'px';
       
-      // Zombi devorga (o'ng burchakka) yetsa
-      if (z.x + 70 >= zoneWidth) {
-        wallHp -= 50;
+      if (z.x >= limitX) {
+        wallHp -= z.maxHp; // Qancha katta bo'lsa shuncha ko'p jon oladi
         z.el.remove();
         zombies.splice(i, 1);
         updateUI();
         
         if (wallHp <= 0) {
-          alert("GAME OVER! Zombilar devorni buzdi.");
+          wallHp = 0; updateUI();
+          alert("GAME OVER! Devor buzildi. Yangitdan boshlang.");
           location.reload();
         }
       }
     }
   }
 
-  /* ====== JANG (O'q otish) ====== */
+  /* ====== JANG (O'Q OTISH) ====== */
   function towerShoot() {
     if (zombies.length === 0) return;
 
-    document.querySelectorAll('.tower-slot .unit').forEach((unitEl, index) => {
-      let level = towerSlots[index];
-      if (!level) return;
-
-      // Eng oldindagi zombini topish (x koordinatasi eng katta bo'lgani)
-      let target = zombies.reduce((prev, current) => (prev.x > current.x) ? prev : current);
-
-      // O'q animatsiyasini yaratish
-      createBullet(unitEl, target, level);
+    let towers = document.querySelectorAll('#wall-zone .slot .unit');
+    towers.forEach(tower => {
+      let level = parseInt(tower.dataset.level);
+      
+      // Eng oldindagi zombini topish
+      let target = zombies.reduce((prev, curr) => (prev.x > curr.x) ? prev : curr);
+      
+      createLaser(tower, target, level);
     });
   }
 
-  function createBullet(unitEl, targetZombie, damageLevel) {
+  function createLaser(towerEl, zombieObj, level) {
     let bullet = document.createElement('div');
     bullet.className = 'bullet';
     
-    let unitRect = unitEl.getBoundingClientRect();
-    let zoneRect = zombieZone.getBoundingClientRect();
+    let tRect = towerEl.getBoundingClientRect();
+    let zRect = zombieZone.getBoundingClientRect();
     
-    // O'q devordagi askardan chiqadi
-    let startX = zoneRect.width; 
-    let startY = unitRect.top - zoneRect.top + 30;
+    let startX = zRect.width;
+    let startY = tRect.top - zRect.top + (tRect.height / 2);
 
     bullet.style.left = startX + 'px';
     bullet.style.top = startY + 'px';
+    
+    // O'q uzunligi va tezligi
+    bullet.style.width = (20 + (level * 5)) + 'px'; 
+    if(level >= 4) bullet.style.background = '#ff0055'; // Katta level qizil otadi
+
     zombieZone.appendChild(bullet);
 
-    // O'q uchishi animatsiyasi (CSS Transition yordamida tezroq qilsa ham bo'ladi)
+    // Animatsiya (setTimeout orqali fizika)
     setTimeout(() => {
-      bullet.style.transition = '0.15s linear';
-      bullet.style.left = (targetZombie.x + 35) + 'px';
-      bullet.style.top = (targetZombie.y + 35) + 'px';
+      bullet.style.transition = '0.1s linear';
+      bullet.style.left = (zombieObj.x + 30) + 'px';
+      bullet.style.top = (zombieObj.y + 30) + 'px';
     }, 10);
 
-    // O'q yetib borgandagi zarar (Damage)
     setTimeout(() => {
       bullet.remove();
-      if (zombies.includes(targetZombie)) {
-        targetZombie.hp -= (damageLevel * 15);
-        let hpFill = targetZombie.el.querySelector('.hp-bar-fill');
-        hpFill.style.width = Math.max(0, (targetZombie.hp / targetZombie.maxHp) * 100) + '%';
+      if (zombies.includes(zombieObj)) {
+        zombieObj.hp -= (level * 25); // Zarar berish
+        let fill = zombieObj.el.querySelector('.hp-bar-fill');
+        if (fill) fill.style.width = Math.max(0, (zombieObj.hp / zombieObj.maxHp) * 100) + '%';
         
-        // Zombi o'lsa
-        if (targetZombie.hp <= 0) {
-          targetZombie.el.remove();
-          zombies = zombies.filter(z => z !== targetZombie);
-          coins += 15;
+        if (zombieObj.hp <= 0) {
+          zombieObj.el.remove();
+          zombies = zombies.filter(z => z !== zombieObj);
+          coins += zombieObj.reward;
           updateUI();
         }
       }
-    }, 160); // 160ms da yetib boradi
+    }, 110);
   }
 
+  /* ====== UI & REKLAMA MODALI ====== */
   function updateUI() {
     document.getElementById('coin-display').innerText = coins;
     document.getElementById('hp-display').innerText = wallHp;
-    document.getElementById('buy-btn').innerText = `Askar Olish (${unitCost}💰)`;
+    document.querySelector('#buy-btn span').innerText = `(${unitCost}💰)`;
   }
 
-  function spinWheel() {
-    alert("Reklama... 500 tanga yutdingiz!");
-    coins += 500;
-    updateUI();
+  // Modallarni boshqarish
+  const modal = document.getElementById('modal-overlay');
+  const spinner = document.getElementById('wheel-spinner');
+  const modalContent = document.getElementById('modal-content');
+
+  function showAdWarning() {
+    spinner.classList.remove('spin-anim');
+    modalContent.style.display = 'block';
+    modal.style.display = 'flex';
   }
 
-  // O'yinni boshlash
+  function closeModal() {
+    modal.style.display = 'none';
+  }
+
+  function watchAd() {
+    // Reklama boshlanishi imitatsiyasi
+    modalContent.style.display = 'none';
+    spinner.classList.add('spin-anim');
+    
+    // Bu yerda kelajakda Adsgram yoki Google AdMob kodi chaqiriladi
+    setTimeout(() => {
+      closeModal();
+      coins += 1500; // Sovg'a
+      wallHp += 500;
+      updateUI();
+      alert("🎉 Tabriklaymiz! Siz 1500 Tanga va 500 Devor HP yutib oldingiz!");
+    }, 2500); // 2.5 soniya "reklama" ko'radi
+  }
+
+  /* START */
   window.onload = initGame;
 
 </script>
