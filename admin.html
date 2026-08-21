@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - Reklama Boshqaruvi</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; background: #f4f4f9; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    textarea, input[type="number"], input[type="password"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-border-box; }
+    button { background: #28a745; color: white; padding: 10px 15px; border: none; margin-top: 20px; cursor: pointer; border-radius: 4px; width: 100%; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Reklamani Boshqarish Paneli</h2>
+    
+    <label>Admin Parol:</label>
+    <input type="password" id="adminPass" value="admin123">
+
+    <hr>
+
+    <label>
+      <input type="checkbox" id="bannerAdEnabled"> Banner Reklamasini Yoqish
+    </label>
+
+    <label>Banner Reklama Kodi (HTML/Script):</label>
+    <textarea id="bannerAdCode" rows="4" placeholder="<script>...</script>"></textarea>
+
+    <hr>
+
+    <label>
+      <input type="checkbox" id="wheelAdEnabled"> Baraban Reklamasini Yoqish
+    </label>
+
+    <label>Reklamalar orasidagi tanaffus (Soniya):</label>
+    <input type="number" id="cooldownSeconds" value="120">
+
+    <button onclick="saveSettings()">Sozlamalarni Saqlash</button>
+  </div>
+
+  <script>
+    const BACKEND_URL = "https://your-render-app.onrender.com";
+
+    async function saveSettings() {
+      const password = document.getElementById('adminPass').value;
+      if (!password) return alert("Parolni kiriting!");
+
+      const data = {
+        password: password,
+        bannerAdEnabled: document.getElementById('bannerAdEnabled').checked,
+        bannerAdCode: document.getElementById('bannerAdCode').value,
+        wheelAdEnabled: document.getElementById('wheelAdEnabled').checked,
+        cooldownSeconds: document.getElementById('cooldownSeconds').value
+      };
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/admin/update-ads`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        alert(result.message);
+      } catch (e) {
+        alert("Xatolik yuz berdi!");
+      }
+    }
+  </script>
+</body>
+</html>
