@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merge Defense Game</title>
+</head>
+<body>
+  <h1>Merge Defense Game</h1>
+
+  <div id="banner-ad-container" style="display:none; margin: 10px 0;"></div>
+
+  <button id="spin-btn" onclick="spinWheel()" style="padding: 12px 20px; font-size: 16px;">
+    🎁 Barabanni Aylan (Reklama ko'rish)
+  </button>
+
+  <script>
+    // RENDER SIZGA BERADIGAN DOMEN MANZILI:
+    const BACKEND_URL = "https://your-render-app.onrender.com";
+
+    let adsSettings = {};
+
+    // Render backend'dan reklama sozlamalarini yuklash
+    async function fetchAdsSettings() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/ads`);
+        adsSettings = await res.json();
+
+        // Banner reklama yoqilgan bo'lsa ko'rsatamiz
+        if (adsSettings.bannerAdEnabled) {
+          const container = document.getElementById('banner-ad-container');
+          container.style.display = 'block';
+          container.innerHTML = adsSettings.bannerAdCode;
+        }
+
+        // Baraban reklamasi o'chirilgan bo'lsa tugmani yashiramiz
+        if (!adsSettings.wheelAdEnabled) {
+          document.getElementById('spin-btn').style.display = 'none';
+        }
+      } catch (err) {
+        console.error("Reklamalarni yuklab bo'lmadi:", err);
+      }
+    }
+
+    function spinWheel() {
+      // Cooldown (Tanaffus) tekshiruvi
+      const lastSpin = localStorage.getItem('last_spin_time');
+      const now = Date.now();
+      const cooldown = (adsSettings.cooldownSeconds || 120) * 1000;
+
+      if (lastSpin && (now - lastSpin < cooldown)) {
+        const remaining = Math.ceil((cooldown - (now - lastSpin)) / 1000);
+        alert(`Keyingi reklama uchun ${remaining} soniya kuting!`);
+        return;
+      }
+
+      // Reklama ko'rsatish va mukofot berish
+      alert("Reklama ko'rildi! Baraban aylandi va 1000 Tanga berildi!");
+      localStorage.setItem('last_spin_time', now);
+    }
+
+    window.onload = fetchAdsSettings;
+  </script>
+</body>
+</html>
